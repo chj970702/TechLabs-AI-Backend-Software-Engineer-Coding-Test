@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
 @Getter
@@ -18,10 +19,10 @@ public class RecUpdateRequest {
     @NotNull(message = "연관 아이템 ID는 필수 입력값 입니다.")
     private Long resultItemId;
 
-    @PositiveOrZero(message = "연관도 점수는 1 이상입니다.")
+    @Positive(message = "연관도 점수는 1 이상입니다.")
     private Integer score;
 
-    @PositiveOrZero(message = "연관도 순위는 1 이상입니다.")
+    @Positive(message = "연관도 순위는 1 이상입니다.")
     private Integer rank;
 
 }
