@@ -1,14 +1,17 @@
 package com.techlab.codetest.service;
 
 import com.opencsv.CSVReader;
-import com.techlab.codetest.dto.response.ProductResponse;
-import com.techlab.codetest.entity.Product;
-import com.techlab.codetest.repository.ProductRepository;
 import com.techlab.codetest.dto.request.RecCreateRequest;
 import com.techlab.codetest.dto.request.RecUpdateRequest;
 import com.techlab.codetest.dto.response.ItemResponse;
+import com.techlab.codetest.dto.response.ProductResponse;
 import com.techlab.codetest.dto.response.RecResponse;
+import com.techlab.codetest.entity.Product;
 import com.techlab.codetest.entity.Rec;
+import com.techlab.codetest.exception.BadRequestException;
+import com.techlab.codetest.exception.ConflictException;
+import com.techlab.codetest.exception.NotFoundException;
+import com.techlab.codetest.repository.ProductRepository;
 import com.techlab.codetest.repository.RecRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.techlab.codetest.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +59,7 @@ public class RecServiceImpl implements RecService{
             }
             recRepository.saveAll(recs);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to import rec.csv");
+            throw new BadRequestException(INVALID_FILE_EXCEPTION);
         }
     }
 
@@ -97,7 +102,7 @@ public class RecServiceImpl implements RecService{
     @Transactional
     public RecResponse createRec(RecCreateRequest requestDto) {
         if (existRecByTargetIdAndResultId(requestDto.getTargetItemId(), requestDto.getResultItemId())) {
-            throw new IllegalArgumentException("중복된 상품 및 연관 상품 입니다.");
+            throw new ConflictException(DUPLICATE_REC_EXCEPTION);
         }
         checkProductById(requestDto.getTargetItemId());
         checkProductById(requestDto.getResultItemId());
@@ -141,22 +146,22 @@ public class RecServiceImpl implements RecService{
     }
     private List<Rec> findRecsByTargetItemId(Long targetItemId) {
         return recRepository.findAllByTargetItemId(targetItemId)
-                .orElseThrow(() -> new IllegalArgumentException("연관된 상품 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException(RECS_NOT_FOUND_EXCEPTION));
     }
 
     private Product findProductById(Long itemId) {
         return productRepository.findByItemId(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Product를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException(PRODUCT_NOT_FOUND_EXCEPTION));
     }
 
     private Rec findRecByTargetIdAndResultId(Long targetItemId, Long resultItemId) {
         return recRepository.findByTargetItemIdAndResultItemId(targetItemId, resultItemId)
-                .orElseThrow(() -> new IllegalArgumentException("상품 및 연관 상품 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException(REC_NOT_FOUND_EXCEPTION));
     }
 
     private void checkProductById(Long itemId) {
         if (!productRepository.existsByItemId(itemId)) {
-            throw new IllegalArgumentException("상품이 존재하지 않습니다.");
+            throw new NotFoundException(PRODUCT_NOT_FOUND_EXCEPTION);
         }
     }
 }

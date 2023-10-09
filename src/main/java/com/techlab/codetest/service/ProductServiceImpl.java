@@ -5,6 +5,9 @@ import com.techlab.codetest.dto.request.ProductCreateRequest;
 import com.techlab.codetest.dto.request.ProductUpdateRequest;
 import com.techlab.codetest.dto.response.ProductResponse;
 import com.techlab.codetest.entity.Product;
+import com.techlab.codetest.exception.BadRequestException;
+import com.techlab.codetest.exception.ConflictException;
+import com.techlab.codetest.exception.NotFoundException;
 import com.techlab.codetest.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.techlab.codetest.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
             }
             productRepository.saveAll(products);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to import product.csv");
+            throw new BadRequestException(INVALID_FILE_EXCEPTION);
         }
     }
 
@@ -98,12 +103,12 @@ public class ProductServiceImpl implements ProductService {
 
     private void checkProductById(Long itemId) {
         if (productRepository.existsByItemId(itemId)) {
-            throw new IllegalArgumentException("중복된 Product 입니다.");
+            throw new ConflictException(DUPLICATE_PRODUCT_EXCEPTION);
         }
     }
 
     private Product findProductById(Long itemId) {
         return productRepository.findByItemId(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Product가 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException(PRODUCT_NOT_FOUND_EXCEPTION));
     }
 }
